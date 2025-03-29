@@ -53,23 +53,23 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			String leftword = words[0];
-			for (int i = 1; i < words.length - 1; i++) {
-				String rightword = words[i];
-				// Skip empty words
-				if (rightword.isEmpty()) {
-					continue;
-				}
+			if (words.length < 2) return;
+			
+			String leftWord = words[0];
+			for (int i = 1; i < words.length; i++) {
+				String rightWord = words[i];
 				
-				// Emit actual bigram
-				BIGRAM.set(leftword, rightword);
+				if (rightWord.isEmpty()) continue;
+				
+				// Emit bigram
+				BIGRAM.set(leftWord, rightWord);
 				context.write(BIGRAM, ONE);
 				
-				// Emit special count for left word
-				BIGRAM.set(leftword, "*");
+				// Emit marginal count for leftWord (except last word)
+				BIGRAM.set(leftWord, MARGINAL_MARKER);
 				context.write(BIGRAM, ONE);
-
-				leftword = rightword;
+	
+				leftWord = rightWord;
 			}
 		}
 	}
@@ -82,8 +82,8 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 
 		// Reuse objects.
 		private final static FloatWritable VALUE = new FloatWritable();
-		private int marginal = 0;
-		private String left = null;
+		private String currentLeftWord = null;
+    	private int currentMarginalCount = 0;
 
 		@Override
 		public void reduce(PairOfStrings key, Iterable<IntWritable> values,
@@ -91,21 +91,25 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			int sum = 0;
-        	for (IntWritable value : values) {
-            	sum += value.get();
-        	}
+			String left = key.getLeftElement();
+			String right = key.getRightElement();
 
-        	if (key.getRightElement().equals("*")) {
-            	// Store the marginal count for the left element
-            	marginal = sum;
-            	context.write(new PairOfStrings(key.getLeftElement(), ""), new FloatWritable((float) sum));
-        	} else if (left != null && left.equals(key.getLeftElement())) {
-            	// Compute and emit the relative frequency
-            	float relativeFrequency = (float) sum / marginal;
-            	VALUE.set(relativeFrequency);
-            	context.write(key, VALUE);
-        	}
+			int sum = 0;
+			for (IntWritable val : values) {
+				sum += val.get();
+			}
+	
+			if (right.equals("*")) {
+				currentLeftWord = left;
+				currentMarginalCount = sum;
+				context.write(new PairOfStrings(left, ""), new FloatWritable(sum));
+			} else {
+				if (left.equals(currentLeftWord)) {
+					float probability = (float) sum / currentMarginalCount;
+					VALUE.set(probability);
+					context.write(key, VALUE);
+				}
+			}
 		}
 	}
 	

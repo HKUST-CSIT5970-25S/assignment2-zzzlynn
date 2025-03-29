@@ -54,21 +54,32 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			for (int i = 0; i < words.length - 1; i++) {
+			if (words.length < 2) {
+				return; // Skip lines with less than two words
+			}
+		
+			String leftword = words[0];
+			for (int i = 1; i < words.length; i++) {
+				String rightword = words[i];
 				// Skip empty words
-				if (words[i].length() == 0 || words[i + 1].length() == 0) {
+				if (rightword.isEmpty()) {
 					continue;
 				}
 		
-				// Set the key as the current word
-				KEY.set(words[i]);
-		
-				// Update the stripe with the next word
+				// Emit stripe for the bigram
 				STRIPE.clear();
-				STRIPE.increment(words[i + 1]);
-		
-				// Emit the key and stripe
+				STRIPE.increment(rightword);
+				KEY.set(leftword);
 				context.write(KEY, STRIPE);
+		
+				// Emit stripe for the marginal count
+				STRIPE.clear();
+				STRIPE.increment("*");
+				context.write(KEY, STRIPE);
+		
+				// Update leftword
+				leftword = rightword;
+			}
 		}
 	}
 
@@ -90,25 +101,29 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			SUM_STRIPES.clear();
 			// Aggregate all stripes for the same key
 			for (HashMapStringIntWritable stripe : stripes) {
 				SUM_STRIPES.plus(stripe);
 			}
 		
-			// Compute the marginal count
-			int marginal = SUM_STRIPES.getSum();
-		
-			// Emit the marginal count
-			context.write(new PairOfStrings(key.toString(), ""), new FloatWritable((float) marginal));
-		
-			// Compute and emit the relative frequencies
-			for (Map.Entry<String, Integer> entry : SUM_STRIPES.entrySet()) {
-				String neighbor = entry.getKey();
-				int count = entry.getValue();
-				float relativeFrequency = (float) count / marginal;		
-				context.write(new PairOfStrings(key.toString(), neighbor), new FloatWritable(relativeFrequency));
-			}
+			// Get marginal count
+            int marginal = sumStripe.get(MARGINAL_MARKER);
+            if (marginal == 0) return;
+
+            // Emit marginal count
+            BIGRAM.set(key.toString(), "");
+            context.write(BIGRAM, new FloatWritable(marginal));
+
+            // Emit bigram probabilities
+            for (Map.Entry<String, Integer> entry : sumStripe.entrySet()) {
+                String rightWord = entry.getKey();
+                if (rightWord.equals(MARGINAL_MARKER)) continue;
+                
+                float prob = (float) entry.getValue() / marginal;
+                BIGRAM.set(key.toString(), rightWord);
+                FREQ.set(prob);
+                context.write(BIGRAM, FREQ);
+            }
 		}
 	}
 
