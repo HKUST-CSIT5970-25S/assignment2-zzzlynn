@@ -67,12 +67,6 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 				BIGRAM.set(words[i], "*");
 				context.write(BIGRAM, ONE);
 			}
-			
-			// Handle the last word's special count
-			if (words.length > 0 && words[words.length-1].length() > 0) {
-				BIGRAM.set(words[words.length-1], "*");
-				context.write(BIGRAM, ONE);
-			}
 		}
 	}
 
