@@ -53,19 +53,23 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			for (int i = 0; i < words.length - 1; i++) {
+			String leftword = words[0];
+			for (int i = 1; i < words.length - 1; i++) {
+				String rightword = words[i];
 				// Skip empty words
-				if (words[i].length() == 0 || words[i+1].length() == 0) {
+				if (rightword.isEmpty()) {
 					continue;
 				}
 				
 				// Emit actual bigram
-				BIGRAM.set(words[i], words[i+1]);
+				BIGRAM.set(leftword, rightword);
 				context.write(BIGRAM, ONE);
 				
 				// Emit special count for left word
-				BIGRAM.set(words[i], "*");
+				BIGRAM.set(leftword, "*");
 				context.write(BIGRAM, ONE);
+
+				leftword = rightword;
 			}
 		}
 	}
@@ -79,6 +83,7 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 		// Reuse objects.
 		private final static FloatWritable VALUE = new FloatWritable();
 		private int marginal = 0;
+		private String left = null;
 
 		@Override
 		public void reduce(PairOfStrings key, Iterable<IntWritable> values,
@@ -95,7 +100,7 @@ public class BigramFrequencyPairs extends Configured implements Tool {
             	// Store the marginal count for the left element
             	marginal = sum;
             	context.write(new PairOfStrings(key.getLeftElement(), ""), new FloatWritable((float) sum));
-        	} else {
+        	} else if (left != null && left.equals(key.getLeftElement())) {
             	// Compute and emit the relative frequency
             	float relativeFrequency = (float) sum / marginal;
             	VALUE.set(relativeFrequency);
