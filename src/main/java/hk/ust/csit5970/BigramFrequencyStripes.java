@@ -151,7 +151,6 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			// Emit the aggregated stripe
 			context.write(key, SUM_STRIPES);
 		}
-		}
 	}
 
 	/**
