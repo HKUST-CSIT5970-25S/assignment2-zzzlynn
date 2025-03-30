@@ -54,7 +54,7 @@ public class CORPairs extends Configured implements Tool {
 			 * TODO: Your implementation goes here.
 			 */
 			// Store words in a list for pair generation
-			List<String> words = new ArrayList<>();
+			List<String> words = new ArrayList<String>();
 			while (doc_tokenizer.hasMoreTokens()) {
 				words.add(doc_tokenizer.nextToken());
 			}
