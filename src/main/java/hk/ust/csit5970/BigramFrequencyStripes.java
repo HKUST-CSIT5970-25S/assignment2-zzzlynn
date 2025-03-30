@@ -44,6 +44,8 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 		// Reuse objects to save overhead of object creation.
 		private static final Text KEY = new Text();
 		private static final HashMapStringIntWritable STRIPE = new HashMapStringIntWritable();
+		private static final String MARGINAL_MARKER = "*";
+
 
 		@Override
 		public void map(LongWritable key, Text value, Context context)
@@ -54,32 +56,25 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			if (words.length < 2) {
-				return; // Skip lines with less than two words
-			}
-		
-			String leftword = words[0];
-			for (int i = 1; i < words.length; i++) {
-				String rightword = words[i];
-				// Skip empty words
-				if (rightword.isEmpty()) {
-					continue;
-				}
-		
-				// Emit stripe for the bigram
-				STRIPE.clear();
-				STRIPE.increment(rightword);
-				KEY.set(leftword);
-				context.write(KEY, STRIPE);
-		
-				// Emit stripe for the marginal count
-				STRIPE.clear();
-				STRIPE.increment("*");
-				context.write(KEY, STRIPE);
-		
-				// Update leftword
-				leftword = rightword;
-			}
+			if (words.length < 2) return;
+
+            String leftWord = words[0];
+            for (int i = 1; i < words.length; i++) {
+                String rightWord = words[i];
+                if (rightWord.isEmpty()) continue;
+
+                // Emit bigram stripe
+                STRIPE.clear();
+                STRIPE.increment(rightWord);
+                KEY.set(leftWord);
+                context.write(KEY, STRIPE);
+
+                // Emit marginal count stripe
+                STRIPE.clear();
+                STRIPE.increment(MARGINAL_MARKER);
+                context.write(KEY, STRIPE);
+
+                leftWord = rightWord;
 		}
 	}
 
@@ -107,7 +102,7 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			}
 		
 			// Get marginal count
-            int marginal = sumStripe.get(MARGINAL_MARKER);
+            int marginal = SUM_STRIPES.get(MARGINAL_MARKER);
             if (marginal == 0) return;
 
             // Emit marginal count
@@ -115,7 +110,7 @@ public class BigramFrequencyStripes extends Configured implements Tool {
             context.write(BIGRAM, new FloatWritable(marginal));
 
             // Emit bigram probabilities
-            for (Map.Entry<String, Integer> entry : sumStripe.entrySet()) {
+            for (Map.Entry<String, Integer> entry : SUM_STRIPES.entrySet()) {
                 String rightWord = entry.getKey();
                 if (rightWord.equals(MARGINAL_MARKER)) continue;
                 

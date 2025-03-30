@@ -43,6 +43,7 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 		// Reuse objects to save overhead of object creation.
 		private static final IntWritable ONE = new IntWritable(1);
 		private static final PairOfStrings BIGRAM = new PairOfStrings();
+		private static final String MARGINAL_MARKER = "*";
 
 		@Override
 		public void map(LongWritable key, Text value, Context context)
