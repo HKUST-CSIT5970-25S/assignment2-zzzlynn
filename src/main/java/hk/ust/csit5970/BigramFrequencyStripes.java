@@ -75,6 +75,7 @@ public class BigramFrequencyStripes extends Configured implements Tool {
                 context.write(KEY, STRIPE);
 
                 leftWord = rightWord;
+			}
 		}
 	}
 
@@ -96,29 +97,30 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			SUM_STRIPES.clear();
 			// Aggregate all stripes for the same key
 			for (HashMapStringIntWritable stripe : stripes) {
 				SUM_STRIPES.plus(stripe);
 			}
 		
 			// Get marginal count
-            int marginal = SUM_STRIPES.get(MARGINAL_MARKER);
-            if (marginal == 0) return;
-
-            // Emit marginal count
-            BIGRAM.set(key.toString(), "");
-            context.write(BIGRAM, new FloatWritable(marginal));
-
-            // Emit bigram probabilities
-            for (Map.Entry<String, Integer> entry : SUM_STRIPES.entrySet()) {
-                String rightWord = entry.getKey();
-                if (rightWord.equals(MARGINAL_MARKER)) continue;
-                
-                float prob = (float) entry.getValue() / marginal;
-                BIGRAM.set(key.toString(), rightWord);
-                FREQ.set(prob);
-                context.write(BIGRAM, FREQ);
-            }
+			Integer marginal = SUM_STRIPES.get(MARGINAL_MARKER);
+			if (marginal == null || marginal == 0) return;
+		
+			// Emit marginal count
+			BIGRAM.set(key.toString(), "");
+			context.write(BIGRAM, new FloatWritable(marginal));
+		
+			// Emit bigram probabilities
+			for (Map.Entry<String, Integer> entry : SUM_STRIPES.entrySet()) {
+				String rightWord = entry.getKey();
+				if (rightWord.equals(MARGINAL_MARKER)) continue;
+		
+				float prob = (float) entry.getValue() / marginal;
+				BIGRAM.set(key.toString(), rightWord);
+				FREQ.set(prob);
+				context.write(BIGRAM, FREQ);
+			}
 		}
 	}
 
@@ -138,6 +140,7 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			SUM_STRIPES.clear();
 			// Aggregate all stripes for the same key
 			for (HashMapStringIntWritable stripe : stripes) {
 				SUM_STRIPES.plus(stripe);
