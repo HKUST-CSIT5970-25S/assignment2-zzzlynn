@@ -53,6 +53,38 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			// Store words in a list for pair generation
+			List<String> words = new ArrayList<>();
+			while (doc_tokenizer.hasMoreTokens()) {
+				words.add(doc_tokenizer.nextToken());
+			}
+	
+			// Use a HashSet to ensure unique pairs per line
+			HashSet<String> uniquePairs = new HashSet<>();
+			for (int i = 0; i < words.size(); i++) {
+				// Emit single word frequency
+				WORD_PAIR.set(words.get(i));
+				context.write(WORD_PAIR, ONE);
+	
+				for (int j = i + 1; j < words.size(); j++) {
+					String wordA = words.get(i);
+					String wordB = words.get(j);
+	
+					// Ensure (A, B) == (B, A) by sorting
+					if (wordA.compareTo(wordB) > 0) {
+						String temp = wordA;
+						wordA = wordB;
+						wordB = temp;
+					}
+	
+					String pair = wordA + "," + wordB;
+					if (!uniquePairs.contains(pair)) {
+						uniquePairs.add(pair);
+						WORD_PAIR.set(pair);
+						context.write(WORD_PAIR, ONE);
+					}
+				}
+			}
 		}
 	}
 
@@ -66,6 +98,11 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+			for (IntWritable value : values) {
+				sum += value.get();
+			}
+			context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -81,6 +118,27 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			Set<String> words = new HashSet<>();
+			while (doc_tokenizer.hasMoreTokens()) {
+				String word = doc_tokenizer.nextToken().toLowerCase();
+				if (!word.isEmpty()) {
+					words.add(word);
+				}
+			}
+			// Create pairs of words
+			List<String> wordList = new ArrayList<>(words);
+			for (int i = 0; i < wordList.size(); i++) {
+				for (int j = i + 1; j < wordList.size(); j++) {
+					String w1 = wordList.get(i);
+					String w2 = wordList.get(j);
+					// Create a pair of words
+					String left = w1.compareTo(w2) < 0 ? w1 : w2;
+					String right = w1.compareTo(w2) < 0 ? w2 : w1;
+					// Create a PairOfStrings object
+					PAIR.set(left, right);
+					context.write(PAIR, ONE);
+				}
+			}
 		}
 	}
 
@@ -93,6 +151,11 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+			for (IntWritable value : values) {
+				sum += value.get();
+			}
+			context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -145,6 +208,21 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int bigramFreq = 0;
+			for (IntWritable value : values) {
+				bigramFreq += value.get();
+			}
+	
+			String wordA = key.getLeftElement();
+			String wordB = key.getRightElement();
+	
+			if (!wordTotalMap.containsKey(wordA) || !wordTotalMap.containsKey(wordB)) return;
+	
+			int freqA = wordTotalMap.get(wordA);
+			int freqB = wordTotalMap.get(wordB);
+	
+			double correlation = (double) bigramFreq / (freqA * freqB);
+			context.write(key, new DoubleWritable(correlation));
 		}
 	}
 
