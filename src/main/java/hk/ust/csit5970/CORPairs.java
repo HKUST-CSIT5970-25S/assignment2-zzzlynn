@@ -43,6 +43,9 @@ public class CORPairs extends Configured implements Tool {
 	 */
 	private static class CORMapper1 extends
 			Mapper<LongWritable, Text, Text, IntWritable> {
+		private static final Text WORD_PAIR = new Text();
+		private static final IntWritable ONE = new IntWritable(1);
+
 		@Override
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
@@ -60,7 +63,7 @@ public class CORPairs extends Configured implements Tool {
 			}
 	
 			// Use a HashSet to ensure unique pairs per line
-			HashSet<String> uniquePairs = new HashSet<>();
+			HashSet<String> uniquePairs = new HashSet<String>();
 			for (int i = 0; i < words.size(); i++) {
 				// Emit single word frequency
 				WORD_PAIR.set(words.get(i));
@@ -111,6 +114,9 @@ public class CORPairs extends Configured implements Tool {
 	 * TODO: Write your second-pass Mapper here.
 	 */
 	public static class CORPairsMapper2 extends Mapper<LongWritable, Text, PairOfStrings, IntWritable> {
+		private static final PairOfStrings PAIR = new PairOfStrings();
+		private static final IntWritable ONE = new IntWritable(1);
+		
 		@Override
 		protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			// Please use this tokenizer! DO NOT implement a tokenizer by yourself!
@@ -118,7 +124,7 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			Set<String> words = new HashSet<>();
+			Set<String> words = new HashSet<String>();
 			while (doc_tokenizer.hasMoreTokens()) {
 				String word = doc_tokenizer.nextToken().toLowerCase();
 				if (!word.isEmpty()) {
@@ -126,7 +132,7 @@ public class CORPairs extends Configured implements Tool {
 				}
 			}
 			// Create pairs of words
-			List<String> wordList = new ArrayList<>(words);
+			List<String> wordList = new ArrayList<String>(words);
 			for (int i = 0; i < wordList.size(); i++) {
 				for (int j = i + 1; j < wordList.size(); j++) {
 					String w1 = wordList.get(i);
@@ -216,10 +222,10 @@ public class CORPairs extends Configured implements Tool {
 			String wordA = key.getLeftElement();
 			String wordB = key.getRightElement();
 	
-			if (!wordTotalMap.containsKey(wordA) || !wordTotalMap.containsKey(wordB)) return;
+			if (!word_total_map.containsKey(wordA) || !word_total_map.containsKey(wordB)) return;
 	
-			int freqA = wordTotalMap.get(wordA);
-			int freqB = wordTotalMap.get(wordB);
+			int freqA = word_total_map.get(wordA);
+			int freqB = word_total_map.get(wordB);
 	
 			double correlation = (double) bigramFreq / (freqA * freqB);
 			context.write(key, new DoubleWritable(correlation));

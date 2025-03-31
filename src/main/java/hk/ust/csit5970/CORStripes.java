@@ -43,6 +43,13 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			while (doc_tokenizer.hasMoreTokens()) {
+				String word = doc_tokenizer.nextToken();
+				if (!word.isEmpty()) {
+					WORD.set(word);
+					context.write(WORD, ONE);
+				}
+			}
 		}
 	}
 
@@ -56,6 +63,11 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+			for (IntWritable value : values) {
+				sum += value.get();
+			}
+			context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -75,6 +87,20 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			List<String> words = new ArrayList<String>(sorted_word_set);
+			for (int i = 0; i < words.size(); i++) {
+				String currentWord = words.get(i);
+				STRIPE.clear();
+	
+				for (int j = 0; j < words.size(); j++) {
+					if (i != j) {
+						STRIPE.increment(words.get(j));
+					}
+				}
+	
+				KEY.set(currentWord);
+				context.write(KEY, STRIPE);
+			}
 		}
 	}
 
@@ -83,12 +109,19 @@ public class CORStripes extends Configured implements Tool {
 	 */
 	public static class CORStripesCombiner2 extends Reducer<Text, MapWritable, Text, MapWritable> {
 		static IntWritable ZERO = new IntWritable(0);
+		private static final HashMapStringIntWritable SUM_STRIPE = new HashMapStringIntWritable();
 
 		@Override
 		protected void reduce(Text key, Iterable<MapWritable> values, Context context) throws IOException, InterruptedException {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			SUM_STRIPE.clear();
+			for (HashMapStringIntWritable stripe : values) {
+				SUM_STRIPE.plus(stripe);
+			}
+	
+			context.write(key, SUM_STRIPE);
 		}
 	}
 
@@ -142,6 +175,23 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			HashMapStringIntWritable sumStripe = new HashMapStringIntWritable();
+			for (HashMapStringIntWritable stripe : values) {
+				sumStripe.plus(stripe);
+			}
+	
+			int freqA = WORD_TOTAL_MAP.getOrDefault(key.toString(), 0);
+	
+			for (Map.Entry<String, Integer> entry : sumStripe.entrySet()) {
+				String neighbor = entry.getKey();
+				int freqB = WORD_TOTAL_MAP.getOrDefault(neighbor, 0);
+				int freqAB = entry.getValue();
+	
+				if (freqA > 0 && freqB > 0) {
+					double correlation = (double) freqAB / (freqA * freqB);
+					context.write(new PairOfStrings(key.toString(), neighbor), new DoubleWritable(correlation));
+				}
+			}
 		}
 	}
 
