@@ -98,7 +98,7 @@ public class CORStripes extends Configured implements Tool {
 				STRIPE.clear();
 				for (int j = 0; j < words.size(); j++) {
 					if (i != j) {
-						stripe.put(new Text(words.get(j)), new IntWritable(1));
+						STRIPE.put(new Text(words.get(j)), new IntWritable(1));
 					}
 				}
 				KEY.set(words.get(i));
@@ -120,7 +120,7 @@ public class CORStripes extends Configured implements Tool {
 			 * TODO: Your implementation goes here.
 			 */
 			SUM_STRIPE.clear();
-			for (MapWritable stripe : stripes) {
+			for (MapWritable stripe : values) {
 				for (Entry<Writable, Writable> entry : stripe.entrySet()) {
 					Text word = (Text) entry.getKey();
 					IntWritable count = (IntWritable) entry.getValue();
@@ -188,8 +188,8 @@ public class CORStripes extends Configured implements Tool {
 			 * TODO: Your implementation goes here.
 			 */
 			MapWritable sumStripe = new MapWritable();
-			for (MapWritable stripe : stripes) {
-				for (Entry<Writable, Writable> entry : stripe.entrySet()) {
+			for (MapWritable stripe : values) {
+				for (Map.Entry<Writable, Writable> entry : stripe.entrySet()) {
 					Text word = (Text) entry.getKey();
 					IntWritable count = (IntWritable) entry.getValue();
 					
@@ -204,7 +204,7 @@ public class CORStripes extends Configured implements Tool {
 	
 			int freqA = word_total_map.getOrDefault(key.toString(), 0);
 	
-			for (Map.Entry<String, Integer> entry : sumStripe.entrySet()) {
+			for (Map.Entry<Writable, Writable> entry : sumStripe.entrySet()) {
 				String neighbor = entry.getKey();
 				int freqB = word_total_map.getOrDefault(neighbor, 0);
 				int freqAB = entry.getValue();
