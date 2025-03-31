@@ -216,7 +216,7 @@ public class CORStripes extends Configured implements Tool {
 			for (Map.Entry<Writable, Writable> entry : sumStripe.entrySet()) {
 				Text neighbor = (Text) entry.getKey();
 				int freqB = word_total_map.containsKey(neighbor.toString()) ? word_total_map.get(neighbor.toString()) : 0;
-				int freqAB = ((IntWritable) entry.getValue()).get();
+				int freqAB = entry.getValue() instanceof IntWritable ? ((IntWritable) entry.getValue()).get() : 0;
 			
 				if (freqA > 0 && freqB > 0) {
 					double correlation = (double) freqAB / (freqA * freqB);
