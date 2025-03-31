@@ -80,6 +80,7 @@ public class CORStripes extends Configured implements Tool {
 	public static class CORStripesMapper2 extends Mapper<LongWritable, Text, Text, MapWritable> {
 		private static final Text KEY = new Text();
 		private static final MapWritable STRIPE = new MapWritable();
+		private static final IntWritable ONE = new IntWritable(1);
 		
 		@Override
 		protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
