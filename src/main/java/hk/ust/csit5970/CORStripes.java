@@ -110,7 +110,7 @@ public class CORStripes extends Configured implements Tool {
 	
 				for (String neighbor : neighbors) {
 					Text neighborText = new Text(neighbor);
-					IntWritable count = (IntWritable) STRIPE.getOrDefault(neighborText, new IntWritable(0));
+					IntWritable count = STRIPE.containsKey(neighborText) ? (IntWritable) STRIPE.get(neighborText) : new IntWritable(0);
 					count.set(count.get() + 1);
 					STRIPE.put(neighborText, count);
 				}
