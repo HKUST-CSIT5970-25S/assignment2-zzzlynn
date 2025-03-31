@@ -33,6 +33,9 @@ public class CORStripes extends Configured implements Tool {
 	 */
 	private static class CORMapper1 extends
 			Mapper<LongWritable, Text, Text, IntWritable> {
+		private static final Text WORD = new Text();
+		private static final IntWritable ONE = new IntWritable(1);
+
 		@Override
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
@@ -75,6 +78,9 @@ public class CORStripes extends Configured implements Tool {
 	 * TODO: Write your second-pass Mapper here.
 	 */
 	public static class CORStripesMapper2 extends Mapper<LongWritable, Text, Text, MapWritable> {
+		private static final HashMapStringIntWritable STRIPE = new HashMapStringIntWritable();
+		private static final Text KEY = new Text();
+		
 		@Override
 		protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			Set<String> sorted_word_set = new TreeSet<String>();
@@ -87,7 +93,7 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			List<String> words = new ArrayList<String>(sorted_word_set);
+			List<String> words = new ArrayList<String>(new HashSet<String>(sorted_word_set));
 			for (int i = 0; i < words.size(); i++) {
 				String currentWord = words.get(i);
 				STRIPE.clear();
