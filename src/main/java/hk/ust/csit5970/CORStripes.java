@@ -96,23 +96,29 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			List<String> words = new ArrayList<String>(sorted_word_set);
-			for (int i = 0; i < words.size(); i++) {
-				String currentWord = words.get(i);
+			String[] words = sorted_word_set.toArray(new String[0]);
+        
+			// Create stripe for each word
+			for (int i = 0; i < words.length; i++) {
 				STRIPE.clear();
-			
-				for (int j = 0; j < words.size(); j++) {
-					if (i != j) {
-						Text neighbor = new Text(words.get(j));
-						IntWritable count = STRIPE.containsKey(neighbor) ? (IntWritable) STRIPE.get(neighbor) : new IntWritable(0);
-						count.set(count.get() + 1);
-						STRIPE.put(neighbor, count);
-					}
-				}
-			
-				KEY.set(currentWord);
-				context.write(KEY, STRIPE);
-			}
+				String currentWord = words[i];
+            
+            // Add all co-occurring words (only once per pair per line)
+            for (int j = 0; j < words.length; j++) {
+                if (i != j) {
+                    String neighbor = words[j];
+                    // To ensure (A,B) and (B,A) are treated same, we sort the pair
+                    if (currentWord.compareTo(neighbor) < 0) {
+                        STRIPE.put(new Text(neighbor), ONE);
+                    }
+                }
+            }
+            
+            if (!STRIPE.isEmpty()) {
+                KEY.set(currentWord);
+                context.write(KEY, STRIPE);
+            }
+        }
 		}
 	}
 
