@@ -121,7 +121,7 @@ public class CORStripes extends Configured implements Tool {
 			 */
 			SUM_STRIPE.clear();
 			for (MapWritable stripe : values) {
-				for (Entry<Writable, Writable> entry : stripe.entrySet()) {
+				for (Map.Entry<Writable, Writable> entry : stripe.entrySet()) {
 					Text word = (Text) entry.getKey();
 					IntWritable count = (IntWritable) entry.getValue();
 					
