@@ -98,13 +98,24 @@ public class CORStripes extends Configured implements Tool {
 			 */
 			List<String> words = new ArrayList<String>(sorted_word_set);
 			for (int i = 0; i < words.size(); i++) {
+				String currentWord = words.get(i);
 				STRIPE.clear();
+
+				Set<String> neighbors = new HashSet<String>();
 				for (int j = 0; j < words.size(); j++) {
 					if (i != j) {
-						STRIPE.put(new Text(words.get(j)), new IntWritable(1));
+						neighbors.add(words.get(j));
 					}
 				}
-				KEY.set(words.get(i));
+	
+				for (String neighbor : neighbors) {
+					Text neighborText = new Text(neighbor);
+					IntWritable count = (IntWritable) STRIPE.getOrDefault(neighborText, new IntWritable(0));
+					count.set(count.get() + 1);
+					STRIPE.put(neighborText, count);
+				}
+	
+				KEY.set(currentWord);
 				context.write(KEY, STRIPE);
 			}
 		}
