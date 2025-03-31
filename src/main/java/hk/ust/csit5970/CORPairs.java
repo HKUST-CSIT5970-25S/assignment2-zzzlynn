@@ -43,8 +43,8 @@ public class CORPairs extends Configured implements Tool {
 	 */
 	private static class CORMapper1 extends
 			Mapper<LongWritable, Text, Text, IntWritable> {
-		private static final Text WORD_PAIR = new Text();
-		private static final IntWritable ONE = new IntWritable(1);
+			private static final Text WORD = new Text();
+			private static final IntWritable ONE = new IntWritable(1);
 
 		@Override
 		public void map(LongWritable key, Text value, Context context)
@@ -57,35 +57,11 @@ public class CORPairs extends Configured implements Tool {
 			 * TODO: Your implementation goes here.
 			 */
 			// Store words in a list for pair generation
-			List<String> words = new ArrayList<String>();
 			while (doc_tokenizer.hasMoreTokens()) {
-				words.add(doc_tokenizer.nextToken());
-			}
-	
-			// Use a HashSet to ensure unique pairs per line
-			HashSet<String> uniquePairs = new HashSet<String>();
-			for (int i = 0; i < words.size(); i++) {
-				// Emit single word frequency
-				WORD_PAIR.set(words.get(i));
-				context.write(WORD_PAIR, ONE);
-	
-				for (int j = i + 1; j < words.size(); j++) {
-					String wordA = words.get(i);
-					String wordB = words.get(j);
-	
-					// Ensure (A, B) == (B, A) by sorting
-					if (wordA.compareTo(wordB) > 0) {
-						String temp = wordA;
-						wordA = wordB;
-						wordB = temp;
-					}
-	
-					String pair = wordA + "," + wordB;
-					if (!uniquePairs.contains(pair)) {
-						uniquePairs.add(pair);
-						WORD_PAIR.set(pair);
-						context.write(WORD_PAIR, ONE);
-					}
+				String word = doc_tokenizer.nextToken();
+				if (!word.isEmpty()) {
+					WORD.set(word);
+					context.write(WORD, ONE);
 				}
 			}
 		}
