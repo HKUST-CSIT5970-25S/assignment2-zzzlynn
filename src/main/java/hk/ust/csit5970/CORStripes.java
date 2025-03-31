@@ -88,7 +88,10 @@ public class CORStripes extends Configured implements Tool {
 			String doc_clean = value.toString().replaceAll("[^a-z A-Z]", " ");
 			StringTokenizer doc_tokenizers = new StringTokenizer(doc_clean);
 			while (doc_tokenizers.hasMoreTokens()) {
-				sorted_word_set.add(doc_tokenizers.nextToken());
+				String token = doc_tokenizers.nextToken();
+				if (!token.isEmpty()) {
+					sorted_word_set.add(token);
+				}
 			}
 			/*
 			 * TODO: Your implementation goes here.
