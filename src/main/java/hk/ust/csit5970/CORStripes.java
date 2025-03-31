@@ -192,7 +192,7 @@ public class CORStripes extends Configured implements Tool {
 				for (Map.Entry<Writable, Writable> entry : stripe.entrySet()) {
 					Text word = (Text) entry.getKey();
 					IntWritable count = (IntWritable) entry.getValue();
-					
+	
 					if (sumStripe.containsKey(word)) {
 						IntWritable sum = (IntWritable) sumStripe.get(word);
 						sum.set(sum.get() + count.get());
@@ -202,16 +202,16 @@ public class CORStripes extends Configured implements Tool {
 				}
 			}
 	
-			int freqA = word_total_map.getOrDefault(key.toString(), 0);
-	
+			int freqA = word_total_map.containsKey(key.toString()) ? word_total_map.get(key.toString()) : 0;
+
 			for (Map.Entry<Writable, Writable> entry : sumStripe.entrySet()) {
-				String neighbor = entry.getKey();
-				int freqB = word_total_map.getOrDefault(neighbor, 0);
-				int freqAB = entry.getValue();
-	
+				Text neighbor = (Text) entry.getKey();
+				int freqB = word_total_map.containsKey(neighbor.toString()) ? word_total_map.get(neighbor.toString()) : 0;
+				int freqAB = ((IntWritable) entry.getValue()).get();
+			
 				if (freqA > 0 && freqB > 0) {
 					double correlation = (double) freqAB / (freqA * freqB);
-					context.write(new PairOfStrings(key.toString(), neighbor), new DoubleWritable(correlation));
+					context.write(new PairOfStrings(key.toString(), neighbor.toString()), new DoubleWritable(correlation));
 				}
 			}
 		}
